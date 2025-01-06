@@ -34,6 +34,9 @@ function mainMenu(): void {
         if (answers.choice === 'Add a Department') {
           addADepartment()
         }
+        if (answers.choice === 'Add a Role') {
+          addARole();
+        }
         if (answers.choice === 'Exit'){
           pool.end();
           process.exit();
@@ -98,7 +101,6 @@ LEFT JOIN employee AS manager ON employee.manager_id = manager.id;`,
           type: 'input',
           name: 'userDepartment',
           message: 'What is the name of the department?',
-
         }
       ])
       .then ((answers) => {
@@ -113,6 +115,59 @@ LEFT JOIN employee AS manager ON employee.manager_id = manager.id;`,
         });
       })
     }
+    function addARole(): void {
+      //Get the department list
+      pool.query(`SELECT DISTINCT name FROM DEPARTMENT`, (err: Error, result: QueryResult) => {
+        if (err) {
+          console.log(err);
+        } else if (result) {
+          const departmentNames = result.rows.map(row => row.name);
+          //console.log (departmentNames);
+        
+        inquirer
+        .prompt ([
+          {
+          type: 'input',
+          name: 'roleName',
+          message: 'What is the name of the role?'
+        },
+        {
+          type: 'input',
+          name: 'roleSalary',
+          message: 'What is the salary of the role?'
+        },
+        {
+          type: 'list',
+          name: 'roleDepartment',
+          message: 'Which department does the role belong to?',
+          choices: departmentNames
+        }
+      ])
+      .then ((answers) => {
+        const { roleName, roleSalary, roleDepartment } = answers;
+        pool.query(
+          // This is a parameterized query that utilizes a subquery to find the department ID based on the department name.
+          `INSERT INTO role (title, salary, department_id)
+          VALUES ($1, $2, (SELECT id FROM department WHERE name = $3))`,
+          [roleName, roleSalary, roleDepartment],
+          (err: Error, _result: QueryResult) => {
+            if (err) {
+              console.log(err);
+            }
+            else {
+              console.log (`Added ${roleName} to the Database.`)
+            }
+            mainMenu();
+          }
+        );
+        });
+      }
+    else {
+      console.log('No departments found');
+      mainMenu();
+    }
+    })};
+
 
 //function calls to start the program
   await connectToDb();
