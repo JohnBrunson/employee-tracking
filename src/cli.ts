@@ -28,8 +28,11 @@ function mainMenu(): void {
         if (answers.choice === 'View all roles') {
           viewAllRoles();
         }
-        if (answers.choice === 'View all employees') {
+        if (answers.choice === 'View all Employees') {
           viewAllEmployees();
+        }
+        if (answers.choice === 'Add a Department') {
+          addADepartment()
         }
         if (answers.choice === 'Exit'){
           pool.end();
@@ -70,36 +73,7 @@ function mainMenu(): void {
       });
 
     }
-    // async function viewAllEmployees(): Promise<void> {
-    //   //note the backticks. This is necessary because of the way the concat function works.
-    //   try {
-    //     const result = await pool.query(
-    //     `SELECT employee.id, 
-    //             employee.first_name AS "Employee First Name",
-    //             employee.last_name AS "Employee Last Name", 
-    //             role.title, 
-    //             department.name AS Department, 
-    //             role.salary, 
-    //             CONCAT (manager.first_name, ' ', manager.last_name) AS "Manager Name" 
-    //     FROM employee 
-    //     INNER JOIN role ON employee.role_id = role.id 
-    //     INNER JOIN department ON role.department_id = department.id
-    //     LEFT JOIN employee AS manager ON employee.manager_id = manager.id;`);
-    //     console.table(result.rows);
-    //     }catch (err) {
-    //       console.error('Error executing query:', err)
-    //     } 
-    //     finally {
-    //       mainMenu();
-    //     }
-    //     // (err: Error, result: QueryResult) => {
-    //     // if (err) {
-    //     //   console.log(err);
-    //     // } else if (result) {
-    //     //   console.table(result.rows);
-    //     // }
-    //     // mainMenu();
-    //   };
+
     function viewAllEmployees(): void {
       pool.query(`SELECT employee.id, employee.first_name AS "Employee First Name", employee.last_name AS "Employee Last Name", role.title, department.name AS Department, role.salary, CONCAT (manager.first_name, ' ', manager.last_name) AS "Manager Name" 
 FROM employee
@@ -118,7 +92,29 @@ LEFT JOIN employee AS manager ON employee.manager_id = manager.id;`,
         mainMenu();
       });
     }
-//function calls
+    function addADepartment(): void {
+      inquirer
+        .prompt([{
+          type: 'input',
+          name: 'userDepartment',
+          message: 'What is the name of the department?',
+
+        }
+      ])
+      .then ((answers) => {
+        const userDepartment = answers.userDepartment;
+        pool.query(`INSERT INTO department (name) VALUES ($1)`,[userDepartment], (err: Error, result: QueryResult) => {
+          if (err) {
+            console.log(err);
+          } else if (result) {
+            console.log (`Added ${userDepartment} to the database.`);
+          }
+          mainMenu();
+        });
+      })
+    }
+
+//function calls to start the program
   await connectToDb();
   mainMenu();
 
