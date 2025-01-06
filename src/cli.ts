@@ -37,6 +37,9 @@ function mainMenu(): void {
         if (answers.choice === 'Add a Role') {
           addARole();
         }
+        if (answers.choice == 'Add an Employee'){
+          addAnEmployee();
+        }
         if (answers.choice === 'Exit'){
           pool.end();
           process.exit();
@@ -168,8 +171,68 @@ LEFT JOIN employee AS manager ON employee.manager_id = manager.id;`,
     }
     })};
 
+    function addAnEmployee(): void {
+      //Get the role list
+      pool.query(`SELECT DISTINCT title FROM ROLE`, (err: Error, result: QueryResult) => {
+        if (err) {
+          console.log(err);
+        } else if (result) {
+          const roleNames = result.rows.map(row => row.title);
+  
+      pool.query (`SELECT id, CONCAT (first_name, ' ', last_name) AS "Manager Name" FROM employee`, (err: Error, result: QueryResult) => {
+        if (err) {
+          console.log(err);
+        } else if (result) {
+          const managers = result.rows.map(row => ({ name: row["Manager Name"], value: row.id}));
+          managers.unshift({ name: 'None', value: null })
+        inquirer
+        .prompt ([
+          {
+          type: 'input',
+          name: 'employeeFirstName',
+          message: 'What is the first name of the employee?'
+        },
+        {
+          type: 'input',
+          name: 'employeeLastName',
+          message: 'What is the last name of the employee?'
+        },
+        {
+          type: 'list',
+          name: 'roleName',
+          message: 'Which department does the role belong to?',
+          choices: roleNames
+        },
+        {
+          type: 'list',
+          name: 'managerId',
+          message: 'Who is the manager of the employee?',
+          choices: managers
+        }
+      ])
+      .then ((answers) => {
+        const { employeeFirstName, employeeLastName, roleName, managerId } = answers;
+        pool.query(
+          `INSERT INTO employee (first_name, last_name, role_id, manager_id)
+          VALUES ($1, $2, (SELECT id FROM role WHERE title = $3), $4)`,
+          [employeeFirstName, employeeLastName, roleName, managerId],
+          (err: Error, _result: QueryResult) => {
+            if (err) {
+              console.log(err);
+            }
+            else {
+              console.log (`Added ${employeeFirstName} ${employeeLastName} to the Database.`)
+            }
+            mainMenu();
+          }
+        );
+      });
+  }
+});
+}
+});
+}
 
 //function calls to start the program
   await connectToDb();
   mainMenu();
-
