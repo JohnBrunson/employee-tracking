@@ -17,11 +17,11 @@ CREATE TABLE role (
 );
 
 
-CREATE TABLE manager (
-    id SERIAL PRIMARY KEY,
-    first_name VARCHAR (30),
-    last_name VARCHAR (30)
-);
+-- CREATE TABLE manager (
+--     id SERIAL PRIMARY KEY,
+--     first_name VARCHAR (30),
+--     last_name VARCHAR (30)
+-- );
 
 CREATE TABLE employee (
     id SERIAL PRIMARY KEY,
@@ -30,5 +30,5 @@ CREATE TABLE employee (
     role_id INTEGER NOT NULL,
     manager_id INTEGER,
     FOREIGN KEY (role_id) REFERENCES role(id) ON DELETE SET NULL,
-    FOREIGN KEY (manager_id) REFERENCES manager(id) ON DELETE SET NULL
+    FOREIGN KEY (manager_id) REFERENCES employee(id) ON DELETE SET NULL
 );
