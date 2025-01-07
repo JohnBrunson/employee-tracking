@@ -14,6 +14,7 @@ function mainMenu() {
                 'Add a Department',
                 'Add a Role',
                 'Add an Employee',
+                'Update an Employee Role',
                 'Exit',
             ],
         },
@@ -35,8 +36,11 @@ function mainMenu() {
         if (answers.choice === 'Add a Role') {
             addARole();
         }
-        if (answers.choice == 'Add an Employee') {
+        if (answers.choice === 'Add an Employee') {
             addAnEmployee();
+        }
+        if (answers.choice === 'Update an Employee Role') {
+            updateEmployeeRole();
         }
         if (answers.choice === 'Exit') {
             pool.end();
@@ -63,7 +67,7 @@ function viewAllDepartments() {
     });
 }
 function viewAllRoles() {
-    pool.query(`SELECT role.id, title, salary, department.name 
+    pool.query(`SELECT role.id, title, salary, department.name AS department
         FROM role 
         JOIN department on role.department_id = department.id;`, (err, result) => {
         if (err) {
@@ -215,6 +219,53 @@ function addAnEmployee() {
                             }
                             else {
                                 console.log(`Added ${employeeFirstName} ${employeeLastName} to the Database.`);
+                            }
+                            mainMenu();
+                        });
+                    });
+                }
+            });
+        }
+    });
+}
+function updateEmployeeRole() {
+    // Get the employee list
+    pool.query(`SELECT id, CONCAT(first_name, ' ', last_name) AS "Employee Name" FROM employee`, (err, result) => {
+        if (err) {
+            console.log(err);
+        }
+        else if (result) {
+            const employees = result.rows.map(row => ({ name: row["Employee Name"], value: row.id }));
+            // Get the role list
+            pool.query(`SELECT DISTINCT title FROM role`, (err, result) => {
+                if (err) {
+                    console.log(err);
+                }
+                else if (result) {
+                    const roleNames = result.rows.map(row => row.title);
+                    inquirer
+                        .prompt([
+                        {
+                            type: 'list',
+                            name: 'employeeId',
+                            message: 'Which employee\'s role do you want to update?',
+                            choices: employees
+                        },
+                        {
+                            type: 'list',
+                            name: 'roleName',
+                            message: 'Which role do you want to assign to the selected employee?',
+                            choices: roleNames
+                        }
+                    ])
+                        .then((answers) => {
+                        const { employeeId, roleName } = answers;
+                        pool.query(`UPDATE employee SET role_id = (SELECT id FROM role WHERE title = $1) WHERE id = $2`, [roleName, employeeId], (err, _result) => {
+                            if (err) {
+                                console.log(err);
+                            }
+                            else {
+                                console.log(`Updated role for employee ID ${employeeId}.`);
                             }
                             mainMenu();
                         });
