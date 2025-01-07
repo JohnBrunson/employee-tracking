@@ -265,7 +265,7 @@ function updateEmployeeRole() {
                                 console.log(err);
                             }
                             else {
-                                console.log(`Updated role for employee ID ${employeeId}.`);
+                                console.log(`Updated role for employee.`);
                             }
                             mainMenu();
                         });
